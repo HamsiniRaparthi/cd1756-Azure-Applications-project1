@@ -67,10 +67,13 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_BF6DA1E2AC2A4C4D8254153CDEECEA9A }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_0C879703CAF24856970E38DC72A1A3CB }}
 
-      - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
-        with:
-          app-name: 'Hamsini'
-          slot-name: 'Production'
+- name: 'Deploy to Azure Web App'
+  uses: azure/webapps-deploy@v3
+  id: deploy-to-webapp
+  with:
+    app-name: 'Hamsini'
+    slot-name: 'Production'
+    package: .
+
+
           
