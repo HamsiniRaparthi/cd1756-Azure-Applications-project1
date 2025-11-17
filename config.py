@@ -1,10 +1,10 @@
 import os
 from urllib.parse import quote_plus
 
-basedir = os.path.abspath(os.path.dirname(_file_))
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config(object):
-    SECRET_KEY = os.environ.get('SECRET_KEY')  
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'secret-key'
 
     # Azure Blob Storage
     BLOB_ACCOUNT = os.environ.get('BLOB_ACCOUNT') or'images11hams'
@@ -12,10 +12,10 @@ class Config(object):
     BLOB_CONTAINER = os.environ.get('BLOB_CONTAINER') or 'images'
 
     # SQL Database
-    SQL_SERVER = os.environ.get('SQL_SERVER') or 'cms-server-09-sqlserver.database.windows.net'
-    SQL_DATABASE = os.environ.get('SQL_DATABASE') or 'cms-server-1122'
-    SQL_USER_NAME = os.environ.get('SQL_USER_NAME') or'cmsadmin'
-    SQL_PASSWORD = os.environ.get('SQL_PASSWORD') or'CMS4admin'
+    SQL_SERVER = 'cms-server-09-sqlserver.database.windows.net' or os.environ.get('SQL_SERVER')
+    SQL_DATABASE = 'cms-server-1122' or os.environ.get('SQL_DATABASE')
+    SQL_USER_NAME = 'cmsadmin' or os.environ.get('SQL_USER_NAME')
+    SQL_PASSWORD = 'CMS4admin' or  os.environ.get('SQL_PASSWORD')
     SQL_PASSWORD_ENC = quote_plus(SQL_PASSWORD)
 
     SQLALCHEMY_DATABASE_URI = (

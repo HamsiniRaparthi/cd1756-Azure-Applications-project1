@@ -7,27 +7,34 @@ from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_session import Session
-import os
+import os, sys
+from logging.handlers import RotatingFileHandler
 
 app = Flask(__name__)
 app.config.from_object(Config)
 # TODO: Add any logging levels and handlers with app.logger
-if not os.path.exists('logs'):
-    os.mkdir('logs')
+# Format used in Log Stream
+LOG_FORMAT = '%(asctime)s %(levelname)s %(name)s: %(message)s'
 
-# Configure the app logger
-logging.basicConfig(
-    level=logging.INFO,  # You can change to DEBUG for more details
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    handlers=[
-        logging.FileHandler('logs/app.log', encoding='utf-8'),
-        logging.StreamHandler()  # This makes logs visible in Azure Log Stream
-    ]
-)
+# 1) Stream logs to stdout (Azure Log Stream reads this)
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setLevel(logging.INFO)
+stream_handler.setFormatter(logging.Formatter(LOG_FORMAT))
 
-app.logger.info("Flask application startup initialized.")
+# 2) Optional: also write to a rolling file if storage is enabled
+handlers = [stream_handler]
+if os.environ.get("WEBSITES_ENABLE_APP_SERVICE_STORAGE", "false").lower() == "true":
+    file_handler = RotatingFileHandler('logs/app.log', maxBytes=1_000_000, backupCount=3)
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
+    handlers.append(file_handler)
 
+# Attach handlers and set level
+for h in handlers:
+    app.logger.addHandler(h)
+app.logger.setLevel(logging.INFO)
 
+app.logger.info("Flask app initialized and logging configured.")
 Session(app)
 db = SQLAlchemy(app)
 login = LoginManager(app)
