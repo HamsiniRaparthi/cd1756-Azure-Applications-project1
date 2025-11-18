@@ -6,11 +6,11 @@ from datetime import datetime
 from flask import render_template, flash, redirect, request, session, url_for
 from werkzeug.urls import url_parse
 from config import Config
-from FlaskWebProject import app, db
+from FlaskWebProject import app, db  # Import app here
 from FlaskWebProject.forms import LoginForm, PostForm
 from flask_login import current_user, login_user, logout_user, login_required
 from FlaskWebProject.models import User, Post
-from FlaskWebProject import LOG
+# from FlaskWebProject import LOG  <-- This line is incorrect and has been removed
 import msal
 import uuid
 
@@ -35,8 +35,8 @@ def new_post():
     if form.validate_on_submit():
         post = Post()
         post.save_changes(form, request.files['image_path'], current_user.id, new=True)
-        # LOG Informational
-        LOG.info('INFO: New post added by user: ' + str(current_user.id))
+        # Use app.logger here
+        app.logger.info('INFO: New post added by user: ' + str(current_user.id))
         return redirect(url_for('home'))
     return render_template(
         'post.html',
@@ -53,8 +53,8 @@ def post(id):
     form = PostForm(formdata=request.form, obj=post)
     if form.validate_on_submit():
         post.save_changes(form, request.files['image_path'], current_user.id)
-        # LOG Informational
-        LOG.info('INFO: Post ' + str(id) + ' edited by user: ' + str(current_user.id))
+        # Use app.logger here
+        app.logger.info('INFO: Post ' + str(id) + ' edited by user: ' + str(current_user.id))
         return redirect(url_for('home'))
     return render_template(
         'post.html',
@@ -66,17 +66,22 @@ def post(id):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        # LOG Informational
-        LOG.info('INFO: User ' + str(current_user.id) + ' is authenticated...')
+        # Use app.logger here
+        app.logger.info('INFO: User ' + str(current_user.id) + ' is authenticated...')
         return redirect(url_for('home'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password')
-            # LOG Unsuccessful login
-            LOG.warning('WARNING: Login Unsucessful....Invalid username or password for user:' + str(user))
+            # Use app.logger here
+            app.logger.warning('WARNING: Login Unsuccessful....Invalid username or password for user:' + str(user))
             return redirect(url_for('login'))
+        
+        # --- THIS IS THE NEW LINE YOU REQUESTED ---
+        app.logger.info('INFO: User ' + user.username + ' logged in successfully.')
+        # ------------------------------------------
+
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
@@ -91,8 +96,8 @@ def authorized():
     if request.args.get('state') != session.get("state"):
         return redirect(url_for("home"))  # No-OP. Goes back to Index page
     if "error" in request.args:  # Authentication/Authorization failure
-        #LOG Error
-        LOG.error('ERROR: Authentication/Authorization failure...')
+        #Use app.logger here
+        app.logger.error('ERROR: Authentication/Authorization failure...')
         return render_template("auth_error.html", result=request.args)
     if request.args.get('code'):
         cache = _load_cache()
@@ -103,8 +108,8 @@ def authorized():
      scopes=Config.SCOPE,
      redirect_uri=url_for('authorized', _external=True, _scheme='https'))
         if "error" in result:
-            #LOG Error
-            LOG.error('ERROR: Did not acquire a token for OAUTH...')
+            #Use app.logger here
+            app.logger.error('ERROR: Did not acquire a token for OAUTH...')
             return render_template("auth_error.html", result=result)
         session["user"] = result.get("id_token_claims")
         # Note: In a real app, we'd use the 'name' property from session["user"] below
@@ -112,14 +117,17 @@ def authorized():
         user = User.query.filter_by(username="admin").first()
         login_user(user)
         _save_cache(cache)
-        # LOG
-        LOG.info('INFO: User Logged In...')
+        # Use app.logger here
+        app.logger.info('INFO: User Logged In via Microsoft...')
     return redirect(url_for('home'))
 
 @app.route('/logout')
 def logout():
-    #LOG
-    LOG.info('INFO: User ' + str(current_user.id) + ' logged out...')
+    #Use app.logger here
+    # Check if user is authenticated before logging username
+    if current_user.is_authenticated:
+        app.logger.info('INFO: User ' + str(current_user.username) + ' logged out...')
+    
     logout_user()
     if session.get("user"): # Used MS Login
         # Wipe out user and its token cache from session
@@ -131,19 +139,24 @@ def logout():
 
     return redirect(url_for('login'))
 
+# Define a cache path
+CACHE_PATH = "msal_cache.bin"
+
 def _load_cache():
     # TODO: Load the cache from `msal`, if it exists
     # DONE
     cache = msal.SerializableTokenCache()
-    if session.get('token_cache'):
-        cache.deserialize(session['token_cache'])
+    if os.path.exists(CACHE_PATH):
+        with open(CACHE_PATH, "r") as f:
+            cache.deserialize(f.read())
     return cache
 
 def _save_cache(cache):
     # TODO: Save the cache, if it has changed
     # DONE
     if cache.has_state_changed:
-        session['token_cache'] = cache.serialize()
+        with open(CACHE_PATH, "w") as f:
+            f.write(cache.serialize())
 
 def _build_msal_app(cache=None, authority=None):
     # TODO: Return a ConfidentialClientApplication
