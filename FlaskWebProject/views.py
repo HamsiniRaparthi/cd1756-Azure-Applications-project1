@@ -77,7 +77,6 @@ def login():
             # LOG Unsuccessful login
             LOG.warning('WARNING: Login Unsucessful....Invalid username or password for user:' + str(user))
             return redirect(url_for('login'))
-        LOG.warning('WARNING: Login sucessfull for the username or password for user:' + str(user))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
