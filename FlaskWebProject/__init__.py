@@ -1,4 +1,3 @@
-82% of storage used … If you run out, you can't create, edit, and upload files. Get 30 GB of storage for ₹59 ₹15/month for 3 months.
 """
 The flask application package.
 """
