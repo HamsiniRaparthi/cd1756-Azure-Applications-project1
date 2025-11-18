@@ -7,15 +7,15 @@ class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'secret-key'
 
     # Azure Blob Storage
-    BLOB_ACCOUNT = os.environ.get('BLOB_ACCOUNT') or 'cmsstorageaccount09'
-    BLOB_STORAGE_KEY = os.environ.get('BLOB_STORAGE_KEY') or 'BtP63x3/gK3S5uQwh/nJCSAK85GhghV3QrcNHCH9Owluh0+zLtlLygb4wLQxla3Xcd0Ra2z6OO7J+AStHKutuQ=='
-    BLOB_CONTAINER = os.environ.get('BLOB_CONTAINER') or 'images'
+    BLOB_ACCOUNT = os.environ.get('BLOB_ACCOUNT') 
+    BLOB_STORAGE_KEY = os.environ.get('BLOB_STORAGE_KEY') 
+    BLOB_CONTAINER = os.environ.get('BLOB_CONTAINER') 
 
     # SQL Database
-    SQL_SERVER = os.environ.get('SQL_SERVER') or 'cms-server-09-sqlserver.database.windows.net'
-    SQL_DATABASE = os.environ.get('SQL_DATABASE') or 'cms-server'
-    SQL_USER_NAME = os.environ.get('SQL_USER_NAME') or'CloudSAd5d5de75'
-    SQL_PASSWORD = os.environ.get('SQL_PASSWORD') or'CMS4admin'
+    SQL_SERVER = os.environ.get('SQL_SERVER') 
+    SQL_DATABASE = os.environ.get('SQL_DATABASE') 
+    SQL_USER_NAME = os.environ.get('SQL_USER_NAME') 
+    SQL_PASSWORD = os.environ.get('SQL_PASSWORD') 
 
     SQLALCHEMY_DATABASE_URI = 'mssql+pyodbc://' + SQL_USER_NAME + '@' + SQL_SERVER + ':' + SQL_PASSWORD + '@' + SQL_SERVER + ':1433/' + SQL_DATABASE + '?driver=ODBC+Driver+17+for+SQL+Server'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
